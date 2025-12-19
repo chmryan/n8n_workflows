@@ -1,0 +1,156 @@
+{
+  "name": "Firecrawl to Nextcloud",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "trigger",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [240, 384]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.firecrawl.dev/v2/crawl",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpBearerAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ url: $json.url, limit: 100 }) }}",
+        "options": {}
+      },
+      "id": "start_crawl",
+      "name": "Start Firecrawl",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [688, 384],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "V78Y4qsb0qTmIKWX",
+          "name": "Bearer Auth Firecrawl.dev"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Start Firecrawl').item.json.url }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpBearerAuth",
+        "options": {}
+      },
+      "id": "check_status",
+      "name": "Check Crawl Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [928, 384],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "V78Y4qsb0qTmIKWX",
+          "name": "Bearer Auth Firecrawl.dev"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "data",
+        "options": {}
+      },
+      "id": "split_documents",
+      "name": "Split Documents",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [1584, 384]
+    },
+    {
+      "parameters": {
+        "path": "=/iosys/media/webpage/source/{{ $json.metadata.sourceURL.replace('https://iosys.swiss', '').replace(/\\\\//g, '_') || 'homepage' }}.md",
+        "fileContent": "={{ $json.markdown }}"
+      },
+      "id": "upload_to_nextcloud",
+      "name": "Upload to Nextcloud",
+      "type": "n8n-nodes-base.nextCloud",
+      "typeVersion": 1,
+      "position": [1808, 384],
+      "credentials": {
+        "nextCloudApi": {
+          "id": "M02sF5RaU3mOhg0m",
+          "name": "NextCloud account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Set the URL to crawl\nconst urlToCrawl = 'https://iosys.swiss';\n\nreturn [{ json: { url: urlToCrawl } }];"
+      },
+      "id": "e92a0311-3e1b-40c4-ba42-8390208fc9e8",
+      "name": "Set URL",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [464, 384]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "condition1",
+              "leftValue": "={{ $('Check Crawl Status').last().json.status }}",
+              "operator": {
+                "operation": "equals",
+                "type": "string"
+              },
+              "rightValue": "completed"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c2d07855-b2e1-4640-82aa-0a43af142c2a",
+      "name": "Is Completed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1360, 384]
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [1136, 384],
+      "id": "29db0d74-1be4-4d2b-8f18-4fb1aca6a1e9",
+      "name": "Wait",
+      "webhookId": "be85628f-6f57-4c15-b9d3-0af0c68511e8"
+    }
+  ],
+  "connections": {
+    "Split Documents": {
+      "main": [[{"node": "Upload to Nextcloud", "type": "main", "index": 0}]]
+    },
+    "Manual Trigger": {
+      "main": [[{"node": "Set URL", "type": "main", "index": 0}]]
+    },
+    "Set URL": {
+      "main": [[{"node": "Start Firecrawl", "type": "main", "index": 0}]]
+    },
+    "Check Crawl Status": {
+      "main": [[{"node": "Wait", "type": "main", "index": 0}]]
+    },
+    "Is Completed?": {
+      "main": [[{"node": "Split Documents", "type": "main", "index": 0}]]
+    },
+    "Start Firecrawl": {
+      "main": [[{"node": "Check Crawl Status", "type": "main", "index": 0}]]
+    },
+    "Wait": {
+      "main": [[{"node": "Is Completed?", "type": "main", "index": 0}]]
+    }
+  },
+  "pinData": {}
+}
