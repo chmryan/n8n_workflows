@@ -4,12 +4,48 @@
 
 This repository contains n8n workflow automation files in JSON format. These workflows are designed to be imported into n8n instances for various automation tasks.
 
+## MCP Permissions
+
+- You are permitted to read, validate, and update the corresponding workflow on the connected n8n instance via MCP tooling.
+- Specifically, you may update or create any workflow ID on the instance at https://n8n.iosys.ch using the latest JSON files from this repository. If a workflow ID does not exist on the instance, you may create it. If you are unsure about the specific workflow ID, ask the user for clarification.
+- **IMPORTANT**: Direct API access to n8n is strictly forbidden. You MUST use MCP tooling exclusively for all n8n operations.
+- Use MCP list/validate tools when available, and perform updates via the instance's supported MCP mechanisms only.
+
 ## Working with n8n Workflows
 
 ### Workflow Structure
 - n8n workflows are stored as JSON files
 - Each workflow contains `nodes` (individual processing steps) and `connections` (data flow between nodes)
 - Credentials are referenced by ID but actual secrets are not stored in the workflow files
+
+### Workflow Update Workflow (Critical)
+
+**ALWAYS follow this process when updating a workflow on the n8n instance:**
+1. **Fetch Latest Version**: Before modifying any workflow JSON, use MCP `n8n_get_workflow` to fetch the latest version from the n8n instance for the specific workflow ID
+2. **Compare with Local JSON**: Compare the fetched version with the local JSON in the repository to identify what has changed since the last deployment
+3. **Merge Changes**: If the instance version has modifications not in local JSON, incorporate those changes into your update or ask the user for clarification
+4. **Update Local JSON**: After fetching and comparing, update the local JSON file in the repository with your changes
+5. **Deploy to Instance**: Use MCP `n8n_update_full_workflow` or `n8n_update_partial_workflow` to deploy the updated workflow
+6. **Verify**: Validate the workflow via MCP tools before and after deployment to ensure integrity
+
+This ensures the instance workflow never loses any concurrent modifications and maintains a single source of truth.
+
+### Error Diagnosis and Debugging
+
+**When a user reports an error or issue with a workflow:**
+1. **Fetch Execution History**: Use MCP `n8n_executions` with `action='list'` and the workflow ID to retrieve recent executions
+2. **Identify Failed Execution**: Look for executions with status `'error'` to find the most recent failure
+3. **Get Full Error Details**: Use MCP `n8n_executions` with `action='get'` and the execution ID to fetch complete error information, including:
+   - Full error message and stack trace
+   - Node where the error occurred
+   - Input/output data for that node
+   - Error context and timing information
+4. **Analyze Root Cause**: Use the execution output to diagnose the issue:
+   - Check if it's an API error (HTTP status code, response body)
+   - Verify node parameters and expressions
+   - Confirm credential configuration
+   - Look for data type mismatches
+5. **Fix and Re-test**: After making corrections, trigger a test execution and verify the fix
 
 ### When Creating or Modifying Workflows
 

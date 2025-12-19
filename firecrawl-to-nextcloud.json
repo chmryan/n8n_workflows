@@ -127,11 +127,175 @@
       "id": "29db0d74-1be4-4d2b-8f18-4fb1aca6a1e9",
       "name": "Wait",
       "webhookId": "be85628f-6f57-4c15-b9d3-0af0c68511e8"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepare Langdock metadata and filename (matches Nextcloud naming)\nreturn items.map(item => {\n  const json = item.json || {};\n  const sourceUrl = json.metadata?.sourceURL || '';\n  let slug = sourceUrl.replace('https://iosys.swiss', '').replace(/\\//g, '_');\n  if (!slug) slug = 'homepage';\n  const fileName = `${slug}.md`;\n\n  return {\n    json: {\n      ...json,\n      knowledgeFolderId: '2fb738ae-93b1-4a0c-814a-fa38bd052629',\n      fileName,\n      sourceUrl,\n    },\n    binary: item.binary,\n  };\n});"
+      },
+      "id": "prepare_langdock",
+      "name": "Prepare Langdock",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1584, 560]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Convert markdown text to base64 binary for multipart upload\nreturn items.map(item => {\n  const { fileName, markdown } = item.json;\n  const b64 = Buffer.from(markdown || '', 'utf8').toString('base64');\n  item.binary = item.binary || {};\n  item.binary.file = {\n    data: b64,\n    mimeType: 'text/markdown',\n    fileName: fileName || 'document.md',\n  };\n  return item;\n});"
+      },
+      "id": "markdown_to_binary",
+      "name": "Markdown to Binary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1808, 560]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ 'https://api.langdock.com/knowledge/' + $json.knowledgeFolderId + '/list' }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpBearerAuth",
+        "options": {}
+      },
+      "id": "list_langdock_files",
+      "name": "List Langdock Files",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2032, 640],
+      "credentials": {
+        "httpBearerAuth": {
+          "name": "Bearer Auth Langdock"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Wrap list response under langdockList to avoid clobbering document fields\nreturn items.map(item => ({ json: { langdockList: item.json } }));"
+      },
+      "id": "wrap_langdock_list",
+      "name": "Wrap Langdock List",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2240, 640]
+    },
+    {
+      "parameters": {
+        "mode": "combine"
+      },
+      "id": "merge_langdock_context",
+      "name": "Merge Langdock Context",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [2032, 480]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Find attachment by exact filename\nreturn items.map(item => {\n  const list = item.json.langdockList?.files || item.json.langdockList?.attachments || [];\n  const fileName = item.json.fileName;\n  const match = Array.isArray(list) ? list.find(entry => entry.fileName === fileName || entry.filename === fileName || entry.name === fileName) : undefined;\n  const attachmentId = match?.id || match?.attachmentId;\n  return {\n    json: { ...item.json, attachmentId },\n    binary: item.binary,\n  };\n});"
+      },
+      "id": "find_langdock_attachment",
+      "name": "Find Langdock Attachment",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2240, 480]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "condition1",
+              "leftValue": "={{ $json.attachmentId || '' }}",
+              "operator": {
+                "operation": "equals",
+                "type": "string"
+              },
+              "rightValue": ""
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "has_langdock_attachment",
+      "name": "Has Langdock Attachment?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [2448, 480]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ 'https://api.langdock.com/knowledge/' + $json.knowledgeFolderId }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpBearerAuth",
+        "sendBinaryData": true,
+        "binaryPropertyName": "file",
+        "options": {},
+        "bodyParametersUi": {
+          "parameter": [
+            {
+              "name": "url",
+              "value": "={{ $json.sourceUrl }}"
+            },
+            {
+              "name": "attachmentId",
+              "value": "={{ $json.attachmentId }}"
+            }
+          ]
+        }
+      },
+      "id": "update_langdock_attachment",
+      "name": "Update Langdock Attachment",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2672, 432],
+      "credentials": {
+        "httpBearerAuth": {
+          "name": "Bearer Auth Langdock"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ 'https://api.langdock.com/knowledge/' + $json.knowledgeFolderId }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpBearerAuth",
+        "sendBinaryData": true,
+        "binaryPropertyName": "file",
+        "options": {},
+        "bodyParametersUi": {
+          "parameter": [
+            {
+              "name": "url",
+              "value": "={{ $json.sourceUrl }}"
+            }
+          ]
+        }
+      },
+      "id": "upload_langdock_file",
+      "name": "Upload Langdock File",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2672, 528],
+      "credentials": {
+        "httpBearerAuth": {
+          "name": "Bearer Auth Langdock"
+        }
+      }
     }
   ],
   "connections": {
     "Split Documents": {
-      "main": [[{"node": "Upload to Nextcloud", "type": "main", "index": 0}]]
+      "main": [[
+        {"node": "Upload to Nextcloud", "type": "main", "index": 0},
+        {"node": "Prepare Langdock", "type": "main", "index": 0}
+      ]]
     },
     "Manual Trigger": {
       "main": [[{"node": "Set URL", "type": "main", "index": 0}]]
@@ -150,6 +314,33 @@
     },
     "Wait": {
       "main": [[{"node": "Is Completed?", "type": "main", "index": 0}]]
+    },
+    "Prepare Langdock": {
+      "main": [[{"node": "Markdown to Binary", "type": "main", "index": 0}]]
+    },
+    "Markdown to Binary": {
+      "main": [[
+        {"node": "Merge Langdock Context", "type": "main", "index": 0},
+        {"node": "List Langdock Files", "type": "main", "index": 0}
+      ]]
+    },
+    "List Langdock Files": {
+      "main": [[{"node": "Wrap Langdock List", "type": "main", "index": 0}]]
+    },
+    "Wrap Langdock List": {
+      "main": [[{"node": "Merge Langdock Context", "type": "main", "index": 1}]]
+    },
+    "Merge Langdock Context": {
+      "main": [[{"node": "Find Langdock Attachment", "type": "main", "index": 0}]]
+    },
+    "Find Langdock Attachment": {
+      "main": [[{"node": "Has Langdock Attachment?", "type": "main", "index": 0}]]
+    },
+    "Has Langdock Attachment?": {
+      "main": [
+        [{"node": "Upload Langdock File", "type": "main", "index": 0}],
+        [{"node": "Update Langdock Attachment", "type": "main", "index": 0}]
+      ]
     }
   },
   "pinData": {}
