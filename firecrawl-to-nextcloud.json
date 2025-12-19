@@ -5,9 +5,12 @@
       "parameters": {},
       "id": "trigger",
       "name": "Manual Trigger",
+      "position": [
+        -240,
+        528
+      ],
       "type": "n8n-nodes-base.manualTrigger",
-      "typeVersion": 1,
-      "position": [240, 384]
+      "typeVersion": 1
     },
     {
       "parameters": {
@@ -22,9 +25,12 @@
       },
       "id": "start_crawl",
       "name": "Start Firecrawl",
+      "position": [
+        208,
+        528
+      ],
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [688, 384],
       "credentials": {
         "httpBearerAuth": {
           "id": "V78Y4qsb0qTmIKWX",
@@ -41,9 +47,12 @@
       },
       "id": "check_status",
       "name": "Check Crawl Status",
+      "position": [
+        432,
+        528
+      ],
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [928, 384],
       "credentials": {
         "httpBearerAuth": {
           "id": "V78Y4qsb0qTmIKWX",
@@ -58,20 +67,26 @@
       },
       "id": "split_documents",
       "name": "Split Documents",
+      "position": [
+        1104,
+        528
+      ],
       "type": "n8n-nodes-base.splitOut",
-      "typeVersion": 1,
-      "position": [1584, 384]
+      "typeVersion": 1
     },
     {
       "parameters": {
-        "path": "=/iosys/media/webpage/source/{{ $json.metadata.sourceURL.replace('https://iosys.swiss', '').replace(/\\\\//g, '_') || 'homepage' }}.md",
+        "path": "=/iosys/media/webpage/source/{{ (\n  ($json.metadata.sourceURL || '')\n    .replace(/^\\s+/, '')\n    .replace(/^https?:\\/\\/(www\\.)?iosys\\.swiss/i, '')\n    .replace(/[^A-Za-z0-9._-]/g, '_')\n    .replace(/^[_\\.]+/, '')\n  ) || 'homepage' }}.md",
         "fileContent": "={{ $json.markdown }}"
       },
       "id": "upload_to_nextcloud",
       "name": "Upload to Nextcloud",
+      "position": [
+        1328,
+        528
+      ],
       "type": "n8n-nodes-base.nextCloud",
       "typeVersion": 1,
-      "position": [1808, 384],
       "credentials": {
         "nextCloudApi": {
           "id": "M02sF5RaU3mOhg0m",
@@ -85,19 +100,17 @@
       },
       "id": "e92a0311-3e1b-40c4-ba42-8390208fc9e8",
       "name": "Set URL",
+      "position": [
+        -16,
+        528
+      ],
       "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [464, 384]
+      "typeVersion": 2
     },
     {
       "parameters": {
         "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 1
-          },
+          "combinator": "and",
           "conditions": [
             {
               "id": "condition1",
@@ -109,23 +122,34 @@
               "rightValue": "completed"
             }
           ],
-          "combinator": "and"
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          }
         },
         "options": {}
       },
       "id": "c2d07855-b2e1-4640-82aa-0a43af142c2a",
       "name": "Is Completed?",
+      "position": [
+        880,
+        528
+      ],
       "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
-      "position": [1360, 384]
+      "typeVersion": 2
     },
     {
       "parameters": {},
-      "type": "n8n-nodes-base.wait",
-      "typeVersion": 1.1,
-      "position": [1136, 384],
       "id": "29db0d74-1be4-4d2b-8f18-4fb1aca6a1e9",
       "name": "Wait",
+      "position": [
+        656,
+        528
+      ],
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
       "webhookId": "be85628f-6f57-4c15-b9d3-0af0c68511e8"
     },
     {
@@ -134,9 +158,12 @@
       },
       "id": "prepare_langdock",
       "name": "Prepare Langdock",
+      "position": [
+        1552,
+        528
+      ],
       "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [1584, 560]
+      "typeVersion": 2
     },
     {
       "parameters": {
@@ -144,13 +171,15 @@
       },
       "id": "markdown_to_binary",
       "name": "Markdown to Binary",
+      "position": [
+        1776,
+        528
+      ],
       "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [1808, 560]
+      "typeVersion": 2
     },
     {
       "parameters": {
-        "method": "GET",
         "url": "={{ 'https://api.langdock.com/knowledge/' + $json.knowledgeFolderId + '/list' }}",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "httpBearerAuth",
@@ -158,11 +187,15 @@
       },
       "id": "list_langdock_files",
       "name": "List Langdock Files",
+      "position": [
+        2000,
+        608
+      ],
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [2032, 640],
       "credentials": {
         "httpBearerAuth": {
+          "id": "U5RnNHJAslcEHmQD",
           "name": "Bearer Auth Langdock"
         }
       }
@@ -173,19 +206,31 @@
       },
       "id": "wrap_langdock_list",
       "name": "Wrap Langdock List",
+      "position": [
+        2224,
+        608
+      ],
       "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [2240, 640]
+      "typeVersion": 2
     },
     {
       "parameters": {
-        "mode": "combine"
+        "mode": "combine",
+        "mergeByFields": {
+          "values": [
+            {}
+          ]
+        },
+        "options": {}
       },
       "id": "merge_langdock_context",
       "name": "Merge Langdock Context",
+      "position": [
+        2448,
+        528
+      ],
       "type": "n8n-nodes-base.merge",
-      "typeVersion": 2,
-      "position": [2032, 480]
+      "typeVersion": 2
     },
     {
       "parameters": {
@@ -193,19 +238,17 @@
       },
       "id": "find_langdock_attachment",
       "name": "Find Langdock Attachment",
+      "position": [
+        2672,
+        528
+      ],
       "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [2240, 480]
+      "typeVersion": 2
     },
     {
       "parameters": {
         "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 1
-          },
+          "combinator": "and",
           "conditions": [
             {
               "id": "condition1",
@@ -217,15 +260,23 @@
               "rightValue": ""
             }
           ],
-          "combinator": "and"
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          }
         },
         "options": {}
       },
       "id": "has_langdock_attachment",
       "name": "Has Langdock Attachment?",
+      "position": [
+        2896,
+        528
+      ],
       "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
-      "position": [2448, 480]
+      "typeVersion": 2
     },
     {
       "parameters": {
@@ -233,29 +284,19 @@
         "url": "={{ 'https://api.langdock.com/knowledge/' + $json.knowledgeFolderId }}",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "httpBearerAuth",
-        "sendBinaryData": true,
-        "binaryPropertyName": "file",
-        "options": {},
-        "bodyParametersUi": {
-          "parameter": [
-            {
-              "name": "url",
-              "value": "={{ $json.sourceUrl }}"
-            },
-            {
-              "name": "attachmentId",
-              "value": "={{ $json.attachmentId }}"
-            }
-          ]
-        }
+        "options": {}
       },
       "id": "update_langdock_attachment",
       "name": "Update Langdock Attachment",
+      "position": [
+        3120,
+        432
+      ],
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [2672, 432],
       "credentials": {
         "httpBearerAuth": {
+          "id": "U5RnNHJAslcEHmQD",
           "name": "Bearer Auth Langdock"
         }
       }
@@ -266,80 +307,207 @@
         "url": "={{ 'https://api.langdock.com/knowledge/' + $json.knowledgeFolderId }}",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "httpBearerAuth",
-        "sendBinaryData": true,
-        "binaryPropertyName": "file",
-        "options": {},
-        "bodyParametersUi": {
-          "parameter": [
-            {
-              "name": "url",
-              "value": "={{ $json.sourceUrl }}"
-            }
-          ]
-        }
+        "options": {}
       },
       "id": "upload_langdock_file",
       "name": "Upload Langdock File",
+      "position": [
+        3120,
+        624
+      ],
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [2672, 528],
       "credentials": {
         "httpBearerAuth": {
+          "id": "U5RnNHJAslcEHmQD",
           "name": "Bearer Auth Langdock"
         }
       }
     }
   ],
   "connections": {
-    "Split Documents": {
-      "main": [[
-        {"node": "Upload to Nextcloud", "type": "main", "index": 0},
-        {"node": "Prepare Langdock", "type": "main", "index": 0}
-      ]]
-    },
-    "Manual Trigger": {
-      "main": [[{"node": "Set URL", "type": "main", "index": 0}]]
-    },
-    "Set URL": {
-      "main": [[{"node": "Start Firecrawl", "type": "main", "index": 0}]]
-    },
     "Check Crawl Status": {
-      "main": [[{"node": "Wait", "type": "main", "index": 0}]]
-    },
-    "Is Completed?": {
-      "main": [[{"node": "Split Documents", "type": "main", "index": 0}]]
-    },
-    "Start Firecrawl": {
-      "main": [[{"node": "Check Crawl Status", "type": "main", "index": 0}]]
-    },
-    "Wait": {
-      "main": [[{"node": "Is Completed?", "type": "main", "index": 0}]]
-    },
-    "Prepare Langdock": {
-      "main": [[{"node": "Markdown to Binary", "type": "main", "index": 0}]]
-    },
-    "Markdown to Binary": {
-      "main": [[
-        {"node": "Merge Langdock Context", "type": "main", "index": 0},
-        {"node": "List Langdock Files", "type": "main", "index": 0}
-      ]]
-    },
-    "List Langdock Files": {
-      "main": [[{"node": "Wrap Langdock List", "type": "main", "index": 0}]]
-    },
-    "Wrap Langdock List": {
-      "main": [[{"node": "Merge Langdock Context", "type": "main", "index": 1}]]
-    },
-    "Merge Langdock Context": {
-      "main": [[{"node": "Find Langdock Attachment", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "index": 0,
+            "node": "Wait",
+            "type": "main"
+          }
+        ]
+      ]
     },
     "Find Langdock Attachment": {
-      "main": [[{"node": "Has Langdock Attachment?", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "index": 0,
+            "node": "Has Langdock Attachment?",
+            "type": "main"
+          }
+        ]
+      ]
     },
     "Has Langdock Attachment?": {
       "main": [
-        [{"node": "Upload Langdock File", "type": "main", "index": 0}],
-        [{"node": "Update Langdock Attachment", "type": "main", "index": 0}]
+        [
+          {
+            "index": 0,
+            "node": "Upload Langdock File",
+            "type": "main"
+          }
+        ],
+        [
+          {
+            "index": 0,
+            "node": "Update Langdock Attachment",
+            "type": "main"
+          }
+        ]
+      ]
+    },
+    "Is Completed?": {
+      "main": [
+        [
+          {
+            "index": 0,
+            "node": "Split Documents",
+            "type": "main"
+          }
+        ],
+        [
+          {
+            "node": "Check Crawl Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List Langdock Files": {
+      "main": [
+        [
+          {
+            "index": 0,
+            "node": "Wrap Langdock List",
+            "type": "main"
+          }
+        ]
+      ]
+    },
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "index": 0,
+            "node": "Set URL",
+            "type": "main"
+          }
+        ]
+      ]
+    },
+    "Markdown to Binary": {
+      "main": [
+        [
+          {
+            "index": 0,
+            "node": "Merge Langdock Context",
+            "type": "main"
+          },
+          {
+            "index": 0,
+            "node": "List Langdock Files",
+            "type": "main"
+          }
+        ]
+      ]
+    },
+    "Merge Langdock Context": {
+      "main": [
+        [
+          {
+            "index": 0,
+            "node": "Find Langdock Attachment",
+            "type": "main"
+          }
+        ]
+      ]
+    },
+    "Prepare Langdock": {
+      "main": [
+        [
+          {
+            "index": 0,
+            "node": "Markdown to Binary",
+            "type": "main"
+          }
+        ]
+      ]
+    },
+    "Set URL": {
+      "main": [
+        [
+          {
+            "index": 0,
+            "node": "Start Firecrawl",
+            "type": "main"
+          }
+        ]
+      ]
+    },
+    "Split Documents": {
+      "main": [
+        [
+          {
+            "index": 0,
+            "node": "Upload to Nextcloud",
+            "type": "main"
+          }
+        ]
+      ]
+    },
+    "Start Firecrawl": {
+      "main": [
+        [
+          {
+            "index": 0,
+            "node": "Check Crawl Status",
+            "type": "main"
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "index": 0,
+            "node": "Is Completed?",
+            "type": "main"
+          }
+        ]
+      ]
+    },
+    "Wrap Langdock List": {
+      "main": [
+        [
+          {
+            "index": 1,
+            "node": "Merge Langdock Context",
+            "type": "main"
+          }
+        ]
+      ]
+    },
+    "Upload to Nextcloud": {
+      "main": [
+        [
+          {
+            "node": "Prepare Langdock",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     }
   },
